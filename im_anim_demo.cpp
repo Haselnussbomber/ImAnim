@@ -1609,7 +1609,7 @@ static void ShowBasicTweensDemo()
 
 		const int num_dots = 12;
 		for (int i = 0; i < num_dots; i++) {
-			ImGuiID id = GetID(i + 100);
+			ImGuiID id = ImGui::GetID((void*)(intptr_t)(i + 100));
 			float stagger_delay = (float)i * 0.08f;
 			float local_time = wave_active ? ImMax(0.0f, wave_time - stagger_delay) : 0.0f;
 			float normalized_t = ImClamp(local_time / 0.6f, 0.0f, 1.0f);
@@ -1676,7 +1676,7 @@ static void ShowBasicTweensDemo()
 		float const vis_width = 300.0f;
 		float const text_width = 100.0f;
 		for (int i = 0; i < 4; i++) {
-			ImGuiID id = GetID(i + 200);
+			ImGuiID id = ImGui::GetID((void*)(intptr_t)(i + 200));
 			float x_pos = iam_tween_float(id, ImHashStr("spring_x"),
 				spring_triggered ? (vis_width - 20.0f) : 20.0f,
 				1.5f, iam_ease_spring_desc(1.0f, configs[i].stiffness, configs[i].damping, 0.0f),
@@ -5053,8 +5053,7 @@ static void ShowScrollDemo()
 	ImGui::Separator();
 
 	// Scrollable child window
-	ImGui::BeginChild("ScrollDemoChild", ImVec2(0, 300), ImGuiChildFlags_Borders);
-
+	ImGui::BeginChild("ScrollDemoChild", ImVec2(0, 300), true);
 
 	// Apply scroll commands inside the child window
 	if (scroll_top) {
@@ -6255,7 +6254,7 @@ static void ShowStyleInterpolationDemo()
 	ImGui::PushStyleColor(ImGuiCol_Separator, blended.Colors[ImGuiCol_Separator]);
 	ImGui::PushStyleColor(ImGuiCol_Border, blended.Colors[ImGuiCol_Border]);
 
-	ImGui::BeginChild("StylePreview", ImVec2(0, 280), ImGuiChildFlags_Borders);
+	ImGui::BeginChild("StylePreview", ImVec2(0, 280), true);
 
 	// Row 1: Buttons
 	ImGui::Text("Buttons");
@@ -7297,7 +7296,7 @@ static void ShowStressTestDemo()
 
 		// Scrollable child region
 		float child_height = 300.0f;
-		ImGui::BeginChild("stress_viz", ImVec2(0, child_height), ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
+		ImGui::BeginChild("stress_viz", ImVec2(0, child_height), true, ImGuiWindowFlags_HorizontalScrollbar);
 
 		ImDrawList* dl = ImGui::GetWindowDrawList();
 		ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
@@ -7461,7 +7460,7 @@ void ImAnimDemoWindow()
 	ImGui::Separator();
 
 	// Begin scrollable child for all demo content
-	ImGui::BeginChild("DemoContent", ImVec2(0, 0), ImGuiChildFlags_None, ImGuiWindowFlags_None);
+	ImGui::BeginChild("DemoContent", ImVec2(0, 0), false, ImGuiWindowFlags_None);
 
 	// ========================================
 	// HERO ANIMATION (Showcase)

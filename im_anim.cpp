@@ -744,7 +744,7 @@ struct profiler_state {
 		// Create new section
 		if (section_count >= PROFILER_MAX_SECTIONS) return -1;
 		int idx = section_count++;
-		strncpy(sections[idx].name, name, 63);
+		strncpy_s(sections[idx].name, 64, name, 63);
 		sections[idx].name[63] = '\0';
 		sections[idx].active = true;
 		return idx;
@@ -3704,7 +3704,8 @@ iam_result iam_clip_save(ImGuiID clip_id, char const* path) {
 	if (!clip) return iam_err_not_found;
 	if (!path) return iam_err_bad_arg;
 
-	FILE* f = fopen(path, "wb");
+	FILE* f = nullptr;
+	fopen_s(&f, path, "wb");
 	if (!f) return iam_err_bad_arg;
 
 	// Write header
@@ -3762,7 +3763,8 @@ iam_result iam_clip_load(char const* path, ImGuiID* out_clip_id) {
 	using namespace iam_clip_detail;
 	if (!path || !out_clip_id) return iam_err_bad_arg;
 
-	FILE* f = fopen(path, "rb");
+	FILE* f = nullptr;
+	fopen_s(&f, path, "rb");
 	if (!f) return iam_err_not_found;
 
 	// Read and verify header
@@ -5358,7 +5360,7 @@ float iam_text_path_width(char const* text, iam_text_path_opts const& opts) {
 		int char_len = ImTextCharFromUtf8(&c, p, nullptr);
 		if (char_len == 0) break;
 
-		ImFontGlyph const* glyph = baked->FindGlyph((ImWchar)c);
+		const ImFontGlyph* glyph = baked->FindGlyph((ImWchar)c);
 		if (glyph) {
 			total_width += glyph->AdvanceX;
 			total_width += opts.letter_spacing;
@@ -5412,7 +5414,7 @@ void iam_text_path(ImGuiID path_id, char const* text, iam_text_path_opts const& 
 		int char_len = ImTextCharFromUtf8(&c, p, nullptr);
 		if (char_len == 0) break;
 
-		ImFontGlyph const* glyph = baked->FindGlyph((ImWchar)c);
+		const ImFontGlyph* glyph = baked->FindGlyph((ImWchar)c);
 		if (!glyph) {
 			p += char_len;
 			continue;
@@ -5468,6 +5470,7 @@ void iam_text_path(ImGuiID path_id, char const* text, iam_text_path_opts const& 
 			corners[3].y = oy + pos.y + sin_a * local_x0 - perp_y * local_y1;
 
 			// Draw textured quad
+            draw_list->PushTextureID(baked->ContainerAtlas->Textures[glyph->TextureIndex].TexID);
 			draw_list->PrimReserve(6, 4);
 			draw_list->PrimQuadUV(
 				corners[0], corners[1], corners[2], corners[3],
@@ -5475,6 +5478,7 @@ void iam_text_path(ImGuiID path_id, char const* text, iam_text_path_opts const& 
 				ImVec2(glyph->U1, glyph->V1), ImVec2(glyph->U0, glyph->V1),
 				opts.color
 			);
+            draw_list->PopTextureID();
 		}
 
 		current_dist += glyph_advance + opts.letter_spacing;
@@ -5543,7 +5547,7 @@ void iam_text_path_animated(ImGuiID path_id, char const* text, float progress, i
 		int char_len = ImTextCharFromUtf8(&c, p, nullptr);
 		if (char_len == 0) break;
 
-		ImFontGlyph const* glyph = baked->FindGlyph((ImWchar)c);
+		const ImFontGlyph* glyph = baked->FindGlyph((ImWchar)c);
 		if (!glyph) {
 			p += char_len;
 			char_idx++;
@@ -5598,6 +5602,7 @@ void iam_text_path_animated(ImGuiID path_id, char const* text, float progress, i
 				color = (color & ~IM_COL32_A_MASK) | (alpha << IM_COL32_A_SHIFT);
 			}
 
+			draw_list->PushTextureID(baked->ContainerAtlas->Textures[glyph->TextureIndex].TexID);
 			draw_list->PrimReserve(6, 4);
 			draw_list->PrimQuadUV(
 				corners[0], corners[1], corners[2], corners[3],
@@ -5605,6 +5610,7 @@ void iam_text_path_animated(ImGuiID path_id, char const* text, float progress, i
 				ImVec2(glyph->U1, glyph->V1), ImVec2(glyph->U0, glyph->V1),
 				color
 			);
+			draw_list->PopTextureID();
 		}
 
 		current_dist += glyph_advance + opts.letter_spacing;
@@ -5823,8 +5829,10 @@ void iam_text_stagger(ImGuiID id, char const* text, float progress, iam_text_sta
 			// Simple axis-aligned quad
 			ImVec2 p0(glyph_x, glyph_y);
 			ImVec2 p1(glyph_x + glyph_width, glyph_y + glyph_height);
+			draw_list->PushTextureID(baked->ContainerAtlas->Textures[glyph->TextureIndex].TexID);
 			draw_list->PrimReserve(6, 4);
 			draw_list->PrimRectUV(p0, p1, ImVec2(glyph->U0, glyph->V0), ImVec2(glyph->U1, glyph->V1), color);
+			draw_list->PopTextureID();
 		} else {
 			// Rotated quad
 			float center_x = glyph_x + glyph_width * 0.5f;
@@ -5844,6 +5852,7 @@ void iam_text_stagger(ImGuiID id, char const* text, float progress, iam_text_sta
 				corners[i].y = center_y + lx * sin_r + ly * cos_r;
 			}
 
+			draw_list->PushTextureID(baked->ContainerAtlas->Textures[glyph->TextureIndex].TexID);
 			draw_list->PrimReserve(6, 4);
 			draw_list->PrimQuadUV(
 				corners[0], corners[1], corners[2], corners[3],
@@ -5851,6 +5860,7 @@ void iam_text_stagger(ImGuiID id, char const* text, float progress, iam_text_sta
 				ImVec2(glyph->U1, glyph->V1), ImVec2(glyph->U0, glyph->V1),
 				color
 			);
+			draw_list->PopTextureID();
 		}
 
 		cursor_x += glyph->AdvanceX + opts.letter_spacing;
@@ -6290,8 +6300,8 @@ void blend_styles(ImGuiStyle const& a, ImGuiStyle const& b, float t, ImGuiStyle*
 	out->GrabRounding = lerp_float(a.GrabRounding, b.GrabRounding, t);
 	out->TabRounding = lerp_float(a.TabRounding, b.TabRounding, t);
 	out->TabBorderSize = lerp_float(a.TabBorderSize, b.TabBorderSize, t);
-	out->TabBarBorderSize = lerp_float(a.TabBarBorderSize, b.TabBarBorderSize, t);
-	out->SeparatorTextBorderSize = lerp_float(a.SeparatorTextBorderSize, b.SeparatorTextBorderSize, t);
+	// out->TabBarBorderSize = lerp_float(a.TabBarBorderSize, b.TabBarBorderSize, t);
+	// out->SeparatorTextBorderSize = lerp_float(a.SeparatorTextBorderSize, b.SeparatorTextBorderSize, t);
 
 	// Blend vec2 properties
 	out->WindowPadding = lerp_vec2(a.WindowPadding, b.WindowPadding, t);
@@ -6303,8 +6313,8 @@ void blend_styles(ImGuiStyle const& a, ImGuiStyle const& b, float t, ImGuiStyle*
 	out->CellPadding = lerp_vec2(a.CellPadding, b.CellPadding, t);
 	out->ButtonTextAlign = lerp_vec2(a.ButtonTextAlign, b.ButtonTextAlign, t);
 	out->SelectableTextAlign = lerp_vec2(a.SelectableTextAlign, b.SelectableTextAlign, t);
-	out->SeparatorTextAlign = lerp_vec2(a.SeparatorTextAlign, b.SeparatorTextAlign, t);
-	out->SeparatorTextPadding = lerp_vec2(a.SeparatorTextPadding, b.SeparatorTextPadding, t);
+	// out->SeparatorTextAlign = lerp_vec2(a.SeparatorTextAlign, b.SeparatorTextAlign, t);
+	// out->SeparatorTextPadding = lerp_vec2(a.SeparatorTextPadding, b.SeparatorTextPadding, t);
 
 	// Blend all colors using the existing color space infrastructure
 	for (int i = 0; i < ImGuiCol_COUNT; i++) {
