@@ -15,10 +15,6 @@
 #include <math.h>
 #include <stdio.h>
 
-#ifdef IM_ANIM_PRE_19200_COMPATIBILITY
-constexpr auto ImGuiChildFlags_Borders = ImGuiChildFlags_Border;
-#endif
-
 // im_anim API is now in global namespace with iam_ prefix
 
 // ============================================================
