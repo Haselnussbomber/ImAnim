@@ -7,6 +7,7 @@
 #include "imgui_internal.h"
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -3695,6 +3696,51 @@ bool iam_get_blended_int(ImGuiID instance_id, ImGuiID channel, int* out) {
 // Clip data: duration, delay, loop_count, direction, stagger params
 // Tracks: count + for each: channel, type, num_keys, keys...
 
+static std::string g_config_directory = "";
+
+void iam_set_config_directory(const char* path) {
+  if (path) {
+    g_config_directory = path;
+  } else {
+    g_config_directory.clear();
+  }
+}
+
+std::string build_full_path(const char* file_path) {
+  if (g_config_directory.empty()) {
+    return std::string(file_path);
+  }
+
+  std::string result = g_config_directory;
+
+  char last_char = result.back();
+  if (last_char != '/' && last_char != '\\') {
+    result += '/';
+  }
+
+  result += file_path;
+  return result;
+}
+
+void ensure_directory_exists(const std::string& path) {
+  if (path.empty()) return;
+
+  size_t last_slash = path.find_last_of("/\\");
+  if (last_slash == std::string::npos) return;
+
+  std::string dir_path = path.substr(0, last_slash);
+  
+  std::string current_level = "";
+  for (char c : dir_path) {
+    current_level += c;
+    if (c == '/' || c == '\\') {
+      CreateDirectoryA(current_level.c_str(), NULL);
+    }
+  }
+
+  CreateDirectoryA(current_level.c_str(), NULL);
+}
+
 static char const IAM_CLIP_MAGIC[4] = { 'I', 'A', 'M', 'C' };
 static int const IAM_CLIP_VERSION = 3;
 
@@ -3704,8 +3750,11 @@ iam_result iam_clip_save(ImGuiID clip_id, char const* path) {
 	if (!clip) return iam_err_not_found;
 	if (!path) return iam_err_bad_arg;
 
+  std::string full_path = build_full_path(path);
+  ensure_directory_exists(full_path);
+
 	FILE* f = nullptr;
-	fopen_s(&f, path, "wb");
+	fopen_s(&f, full_path.c_str(), "wb");
 	if (!f) return iam_err_bad_arg;
 
 	// Write header
@@ -3763,8 +3812,10 @@ iam_result iam_clip_load(char const* path, ImGuiID* out_clip_id) {
 	using namespace iam_clip_detail;
 	if (!path || !out_clip_id) return iam_err_bad_arg;
 
+  std::string full_path = build_full_path(path);
+
 	FILE* f = nullptr;
-	fopen_s(&f, path, "rb");
+	fopen_s(&f, full_path.c_str(), "rb");
 	if (!f) return iam_err_not_found;
 
 	// Read and verify header

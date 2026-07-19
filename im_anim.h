@@ -89,6 +89,8 @@ typedef float (*iam_ease_fn)(float t);
 // Public API declarations
 // ----------------------------------------------------
 
+void iam_set_config_directory(const char* path);
+
 // Frame management
 void iam_update_begin_frame();                                                      // Call once per frame before any tweens.
 void iam_gc(unsigned int max_age_frames = 600);                                     // Remove stale tween entries older than max_age_frames.
