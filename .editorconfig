@@ -1,0 +1,9 @@
+# see https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options
+
+root = true
+
+# All files
+[*]
+end_of_line = lf
+indent_style = space
+charset = utf-8
